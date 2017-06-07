@@ -1,0 +1,7 @@
+clear all; close all; clc;
+
+originalImg = im2double(imread('sample.jpg'));
+[h, w, c] = size(originalImg);
+imshow(originalImg);
+
+imageRectification(originalImg, 450, 600);

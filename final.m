@@ -1,6 +1,6 @@
 clear all; close all; clc;
 
-originalImg = im2double(imread('test.png'));
+originalImg = im2double(imread('sample2.jpg'));
 [h, w, c] = size(originalImg);
 resultImg = originalImg;
 imshow(originalImg);

@@ -1,60 +1,49 @@
-clear all; close all; clc;
+function [resultImg] = imageRectification(originalImg, rectWidth, rectHeight)
+%% Initialize parameter
+target = [1 1; rectWidth 1; rectWidth rectHeight; 1 rectHeight];
+x_tar = target(:,1);
+y_tar = target(:,2);
 
-originalImg = im2double(imread('sample.jpg'));
 [h, w, c] = size(originalImg);
-resultImg = zeros(600,450,c);
+resultImg = zeros(rectHeight,rectWidth,c);
 imshow(originalImg);
 
 %% Mouse input
-xlabel ('Select 4 points along the outline', 'FontName', '微軟正黑體', 'FontSize', 14);
+xlabel ('Select 4 points to define the area which should be rectified', 'FontName', '微軟正黑體', 'FontSize', 14);
 [ x, y ] = ginput(4);
-point = [x y];
 
-% A = [-x(1) -y(1) -1 0 0 0 x(1)*1 y(1)*1;
-%      0 0 0 -x(1) -y(1) -1 x(1)*1 y(1)*1;
-%      -x(2) -y(2) -1 0 0 0 x(2)*450 y(2)*450;
-%      0 0 0 -x(2) -y(2) -1 x(2)*1 y(2)*1;
-%      -x(3) -y(3) -1 0 0 0 x(3)*450 y(3)*450;
-%      0 0 0 -x(3) -y(3) -1 x(3)*600 y(3)*600;
-%      -x(4) -y(4) -1 0 0 0 x(4)*1 y(4)*1;
-%      0 0 0 -x(4) -y(4) -1 x(4)*600 y(4)*600
-%      ];
-m = [x(1) y(1) 1 0 0 0 -x(1)*1 -y(1)*1;
-     x(2) y(2) 1 0 0 0 -x(2)*450 -y(2)*450;
-     x(3) y(3) 1 0 0 0 -x(3)*450 -y(3)*450;
-     x(4) y(4) 1 0 0 0 -x(4)*1 -y(4)*1;
-     0 0 0 x(1) y(1) 1 -x(1)*1 -y(1)*1;
-     0 0 0 x(2) y(2) 1 -x(2)*1 -y(2)*1;
-     0 0 0 x(3) y(3) 1 -x(3)*600 -y(3)*600;
-     0 0 0 x(4) y(4) 1 -x(4)*600 -y(4)*600;
+%% Implement Homography
+m = [x(1) y(1) 1 0 0 0 -x(1)*x_tar(1) -y(1)*x_tar(1);
+     x(2) y(2) 1 0 0 0 -x(2)*x_tar(2) -y(2)*x_tar(2);
+     x(3) y(3) 1 0 0 0 -x(3)*x_tar(3) -y(3)*x_tar(3);
+     x(4) y(4) 1 0 0 0 -x(4)*x_tar(4) -y(4)*x_tar(4);
+     0 0 0 x(1) y(1) 1 -x(1)*y_tar(1) -y(1)*y_tar(1);
+     0 0 0 x(2) y(2) 1 -x(2)*y_tar(2) -y(2)*y_tar(2);
+     0 0 0 x(3) y(3) 1 -x(3)*y_tar(3) -y(3)*y_tar(3);
+     0 0 0 x(4) y(4) 1 -x(4)*y_tar(4) -y(4)*y_tar(4);
     ];
 
-% z = [-1;-1;-450;-1;-450;-600;-1;-600];
-z = [1; 450; 450; 1; 1; 1; 600; 600];
+z = [x_tar(1); x_tar(2); x_tar(3); x_tar(4); y_tar(1); y_tar(2); y_tar(3); y_tar(4)];
 H = m\z;
 H = H';
 
-%  H = [A\z ;1];
-%  H_reshape = reshape(H,3,3);
-%  H_reshape = H_reshape';
-%  H_plum = inv(H_reshape);
  for i = 1:4
      a = (H(1)*x(i) + H(2)*y(i) + H(3))/(H(7)*x(i) + H(8)*y(i) + 1);
      b = (H(4)*x(i) + H(5)*y(i) + H(6))/(H(7)*x(i) + H(8)*y(i) + 1);
-     fprintf('x y : %f %f\n',a,b );
+%      fprintf('x y : %f %f\n',a,b );
  end
- A = H(1) - H(7)*450;
- B = H(2) - H(8)*450;
- C = 450 - H(3);
- D = H(4) - H(7)*600;
- E = H(5) - H(8)*600;
- F = 600 - H(6);
+ A = H(1) - H(7)*rectWidth;
+ B = H(2) - H(8)*rectWidth;
+ C = rectWidth - H(3);
+ D = H(4) - H(7)*rectHeight;
+ E = H(5) - H(8)*rectHeight;
+ F = rectHeight - H(6);
 a = ((C*E)-(B*F))/((A*E)-(B*D)); 
 b = ((C*D)-(A*F))/((B*D)-(A*E)); 
-fprintf('x y : %f %f\n',a,b );
+% fprintf('x y : %f %f\n',a,b );
  
- for i = 1:600
-     for j = 1:450
+ for i = 1:rectHeight
+     for j = 1:rectWidth
          A = H(1) - H(7)*j;
          B = H(2) - H(8)*j;
          C = j - H(3);
@@ -67,12 +56,4 @@ fprintf('x y : %f %f\n',a,b );
      end
  end 
 
-
-%  for i = 1:450
-%      for j = 1:450
-%          p = H_plum * [i; j; 1];
-%          resultImg(i,j,:) = originalImg(round(p(1)), round(p(2)), :);
-%      end
-%  end
-%  
  imshow(resultImg);
