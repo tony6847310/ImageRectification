@@ -57,3 +57,4 @@ b = ((C*D)-(A*F))/((B*D)-(A*E));
  end 
 
  imshow(resultImg);
+end
